@@ -11,6 +11,14 @@ module Dino
           set_pin_mode(pin, :out)
           analog_write(pin, Board::LOW)
         end
+
+        @xor = options[:inverse] ? Board::HIGH : Board::LOW
+      end
+
+      def color(r,g,b)
+        analog_write(pins[:red],   r ^ @xor)
+        analog_write(pins[:green], g ^ @xor)
+        analog_write(pins[:blue],  b ^ @xor)
       end
 
       # Format: [R, G, B]
@@ -22,21 +30,19 @@ module Dino
         yellow:  [255, 255, 000],
         magenta: [255, 000, 255],
         white:   [255, 255, 255],
-        off:     [000, 000, 000]
+        black:   [000, 000, 000]
       }
 
-      COLORS.each_key do |color|
-        define_method(color) do
-          analog_write(pins[:red], COLORS[color][0])
-          analog_write(pins[:green], COLORS[color][1])
-          analog_write(pins[:blue], COLORS[color][2])
-        end 
+      COLORS.each_key do |color_name|
+        define_method(color_name) { color *COLORS[color_name] }
       end
+      alias_method :on,  :white
+      alias_method :off, :black
 
       def blinky
-        [:red, :green, :blue].cycle do |color|
+        [:red, :yellow, :green, :cyan, :blue, :magenta].cycle do |color|
           self.send(color)
-          sleep(0.01)
+          sleep(0.1)
         end
       end
     end
